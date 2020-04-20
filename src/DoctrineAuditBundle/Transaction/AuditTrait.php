@@ -4,6 +4,7 @@ namespace DH\DoctrineAuditBundle\Transaction;
 
 use DH\DoctrineAuditBundle\Helper\DoctrineHelper;
 use DH\DoctrineAuditBundle\User\UserInterface;
+use Doctrine\Common\Persistence\Proxy;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -164,7 +165,8 @@ trait AuditTrait
             return null;
         }
 
-        $em->getUnitOfWork()->initializeObject($entity); // ensure that proxies are initialized
+        $em->getUnitOfWork()->initializeObject($entity);
+
         /** @var ClassMetadata $meta */
         $meta = $em->getClassMetadata(DoctrineHelper::getRealClassName($entity));
         $pkName = $meta->getSingleIdentifierFieldName();

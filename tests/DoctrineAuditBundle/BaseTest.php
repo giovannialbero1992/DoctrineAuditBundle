@@ -14,6 +14,7 @@ use DH\DoctrineAuditBundle\User\TokenStorageUserProvider;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Proxy\ProxyFactory;
@@ -21,6 +22,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Exception;
 use Gedmo;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Doctrine\UuidType;
 use Symfony\Bundle\SecurityBundle\Security\FirewallMap;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -224,6 +226,11 @@ abstract class BaseTest extends TestCase
             return $this->em;
         }
 
+        $result = Type::hasType('uuid');
+        if (false === $result) {
+            Type::addType('uuid', UuidType::class);
+        }
+
         $config = new Configuration();
         $config->setMetadataCacheImpl(new ArrayCache());
         $config->setQueryCacheImpl(new ArrayCache());
@@ -238,7 +245,6 @@ abstract class BaseTest extends TestCase
         Gedmo\DoctrineExtensions::registerAnnotations();
 
         $connection = $this->getSharedConnection();
-
         $this->em = EntityManager::create($connection, $config);
 
         $this->setAuditConfiguration($this->createAuditConfiguration([], $this->em));
@@ -368,7 +374,7 @@ abstract class BaseTest extends TestCase
         $config->setMetadataCacheImpl(new ArrayCache());
         $config->setQueryCacheImpl(new ArrayCache());
         $config->setProxyDir(__DIR__.'/Proxies');
-        $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
+        $config->setAutoGenerateProxyClasses(true);
         $config->setProxyNamespace('DH\DoctrineAuditBundle\Tests\Proxies');
         $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver([__DIR__.'/Fixtures'], false));
 

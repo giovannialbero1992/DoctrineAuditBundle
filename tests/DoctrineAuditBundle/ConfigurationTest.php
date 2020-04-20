@@ -9,6 +9,7 @@ use DH\DoctrineAuditBundle\Tests\Fixtures\Core\Annotation\AuditedEntity;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Core\Annotation\UnauditedEntity;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Core\Standard\Comment;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Core\Standard\Post;
+use DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Tag;
 use DH\DoctrineAuditBundle\User\TokenStorageUserProvider;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\SecurityBundle\Security\FirewallMap;
@@ -128,6 +129,21 @@ final class ConfigurationTest extends BaseTest
             Comment::class => null,
             AuditedEntity::class => [
                 'ignored_columns' => ['ignoredField'],
+                'enabled' => true,
+                'roles' => null,
+            ],
+            \DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Post::class => [
+                'ignored_columns' => [],
+                'enabled' => true,
+                'roles' => null,
+            ],
+            \DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Comment::class => [
+                'ignored_columns' => [],
+                'enabled' => true,
+                'roles' => null,
+            ],
+            Tag::class => [
+                'ignored_columns' => [],
                 'enabled' => true,
                 'roles' => null,
             ],
