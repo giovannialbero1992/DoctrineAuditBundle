@@ -12,6 +12,17 @@ use DH\DoctrineAuditBundle\Tests\Fixtures\Issue37\Locale;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Issue37\User;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Issue40\CoreCase;
 use DH\DoctrineAuditBundle\Tests\Fixtures\Issue40\DieselCase;
+use DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Comment;
+use DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\DataFixtures;
+use DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\DependentDataFixture;
+use DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Post;
+use Doctrine\Common\DataFixtures\Event\Listener\ORMReferenceListener;
+use Doctrine\Common\DataFixtures\ProxyReferenceRepository;
+use Doctrine\Common\DataFixtures\ReferenceRepository;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\SchemaTool;
 
 /**
  * @internal
@@ -29,17 +40,21 @@ final class IssueTest extends BaseTest
         $this->getSchemaTool();
 
         $configuration = $this->getAuditConfiguration();
-        $configuration->setEntities([
-            DieselCase::class => ['enabled' => true],
-            CoreCase::class => ['enabled' => true],
-            Locale::class => ['enabled' => true],
-            User::class => ['enabled' => true],
-            Vehicle::class => ['enabled' => true],
-            Car::class => ['enabled' => true],
-            Bike::class => ['enabled' => true],
-            Cat::class => ['enabled' => true],
-            Dog::class => ['enabled' => true],
-        ]);
+        $configuration->setEntities(
+            [
+                DieselCase::class => ['enabled' => true],
+                CoreCase::class => ['enabled' => true],
+                Locale::class => ['enabled' => true],
+                User::class => ['enabled' => true],
+                Vehicle::class => ['enabled' => true],
+                Car::class => ['enabled' => true],
+                Bike::class => ['enabled' => true],
+                Cat::class => ['enabled' => true],
+                Dog::class => ['enabled' => true],
+                Post::class => ['enabled' => true],
+                Comment::class => ['enabled' => true],
+            ]
+        );
 
         $this->setUpEntitySchema();
         $this->setUpAuditSchema();
@@ -151,16 +166,14 @@ final class IssueTest extends BaseTest
         $localeFR = new Locale();
         $localeFR
             ->setId('fr_FR')
-            ->setName('Français')
-        ;
+            ->setName('Français');
         $em->persist($localeFR);
         $em->flush();
 
         $localeEN = new Locale();
         $localeEN
             ->setId('en_US')
-            ->setName('Français')
-        ;
+            ->setName('Français');
         $em->persist($localeEN);
         $em->flush();
 
@@ -172,20 +185,50 @@ final class IssueTest extends BaseTest
         $user1 = new User();
         $user1
             ->setUsername('john.doe')
-            ->setLocale($localeFR)
-        ;
+            ->setLocale($localeFR);
         $em->persist($user1);
         $em->flush();
 
         $user2 = new User();
         $user2
             ->setUsername('dark.vador')
-            ->setLocale($localeEN)
-        ;
+            ->setLocale($localeEN);
         $em->persist($user2);
         $em->flush();
 
         $audits = $reader->getAudits(User::class);
         self::assertCount(2, $audits, 'results count ok.');
+    }
+
+    public function testIssueNext(): void
+    {
+        $em = $this->getEntityManager();
+        $referenceRepository = new ProxyReferenceRepository($em);
+
+        $em->transactional(
+            function (EntityManagerInterface $em) use ($referenceRepository) {
+                $dependentDataFixture = new DependentDataFixture();
+                $dataFixture = new DataFixtures();
+
+                $dependentDataFixture->setReferenceRepository($referenceRepository);
+                $dataFixture->setReferenceRepository($referenceRepository);
+
+                $dependentDataFixture->load($em);
+                $em->clear();
+                $dataFixture->load($em);
+                $em->clear();
+            }
+        );
+
+
+        $post = $referenceRepository->getReference('post_1');
+        $this->assertNotNull($post->getId());
+        $this->assertEquals('I\'m a title', $post->getTitle());
+
+        $comment1 = $referenceRepository->getReference('comment_1');
+        $this->assertNotNull($comment1->getId());
+        $this->assertEquals('Comment One', $comment1->getBody());
+
+        $tag = $referenceRepository->getReference('tag');
     }
 }

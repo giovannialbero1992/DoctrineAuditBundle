@@ -42,6 +42,9 @@ abstract class CoreTest extends BaseTest
             Comment::class => ['enabled' => true],
             Tag::class => ['enabled' => true],
             DummyEntity::class => ['enabled' => true],
+            \DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Comment::class => ['enabled' => true],
+            \DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Post::class => ['enabled' => true],
+            \DH\DoctrineAuditBundle\Tests\Fixtures\IssueX\Tag::class => ['enabled' => true],
         ]);
 
         $this->setUpEntitySchema();
